@@ -4,7 +4,9 @@ mp_N0 = 8.0e3
 density_water = 1.0e3
 
 def mp_slope_3rd(lwc):
-    return (N.pi * density_water * mp_N0 * 1.0e-9 / lwc)**(0.25)
+    '''Gives the slope for the Marshall-Palmer drop size distribution
+       given the liquid water content mixing ratio in g/kg'''
+    return (N.pi * density_water * mp_N0 * 1.0e6 / lwc)**0.25
 
 def mp_from_lwc(d, lwc):
     return marshall_palmer(d, mp_slope_3rd(lwc))
