@@ -4,19 +4,19 @@ mp_N0 = 8.0e3
 density_water = 1.0e3
 
 def mp_slope_3rd(lwc):
-  return (N.pi * density_water * mp_N0 * 1.0e-9 / lwc)**(0.25)
+    return (N.pi * density_water * mp_N0 * 1.0e-9 / lwc)**(0.25)
 
 def mp_from_lwc(d, lwc):
-  return marshall_palmer(d, mp_slope_3rd(lwc))
+    return marshall_palmer(d, mp_slope_3rd(lwc))
 
 def marshall_palmer(d, lam):
-  return exponential(d, lam, mp_N0)
+    return exponential(d, lam, mp_N0)
 
 def exponential(d, lam, N0):
-  return gamma(d, lam, N0, 0.0)
+    return gamma(d, lam, N0, 0.0)
 
 def gamma(d, lam, N0, mu):
-  return N0 * (d[N.newaxis,:]**mu) * N.exp(-lam * d)
+    return (N0 * (d[N.newaxis,:]**mu) * N.exp(-lam * d)).squeeze()
 
 if __name__ == '__main__':
     import pylab as P
