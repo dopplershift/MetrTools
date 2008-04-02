@@ -11,7 +11,10 @@ g_per_kg = 1000.
 
 #Distance conversions
 cm_per_m = 100.
-mm_per_m = 1000.
+mm_per_cm = 10.
+mm_per_m = mm_per_cm * cm_per_m
+m_per_km = 1000.
+cm_per_in = 2.54
 nmi_per_m = 1./1852.354944
 
 #Angular conversion
