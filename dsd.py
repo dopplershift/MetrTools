@@ -19,8 +19,7 @@ def exponential(d, lam, N0):
     return gamma(d, lam, N0, 0.0)
 
 def gamma(d, lam, N0, mu):
-    return (N0 * d[:,N.newaxis]**mu * N.exp(-lam[N.newaxis,:]
-        * d[:,N.newaxis])).squeeze()
+    return N0 * d**mu * N.exp(-lam * d)
 
 if __name__ == '__main__':
     import pylab as P
