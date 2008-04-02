@@ -10,15 +10,27 @@ def mp_slope_3rd(lwc):
     return (N.pi * density_water * mp_N0 / lwc)**0.25
 
 def mp_from_lwc(d, lwc):
+    '''Returns the Marshall-Palmer distribution weights corresponding for the
+       given diameters using the given liquid water content to calculate the
+       slope parameter.  All quantities should be in MKS.'''
     return marshall_palmer(d, mp_slope_3rd(lwc))
 
 def marshall_palmer(d, lam):
+    '''Returns the Marshall-Palmer distribution weights corresponding for the
+       given diameters using the given slope parameter.  All quantities should
+       be in MKS.'''
     return exponential(d, lam, mp_N0)
 
 def exponential(d, lam, N0):
+    '''Returns the exponential distribution weights corresponding for the
+       given diameters using the given slope and intercept parameters.  All
+       quantities should be in MKS.'''
     return gamma(d, lam, N0, 0.0)
 
 def gamma(d, lam, N0, mu):
+    '''Returns the modifed gamma distribution weights corresponding for the
+       given diameters using the given slope, intercept, and shpe parameters.
+       All quantities should be in MKS.'''
     return N0 * d**mu * N.exp(-lam * d)
 
 if __name__ == '__main__':
