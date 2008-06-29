@@ -27,4 +27,6 @@ sec_per_hour = sec_per_min * min_per_hour
 hour_per_day = 24.
 sec_per_day = sec_per_hour * hour_per_day
 
-
+#Temperature conversions
+degf_per_degc = 9./5.
+kelvin_offset = 273.15
