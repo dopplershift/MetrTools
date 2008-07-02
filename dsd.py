@@ -38,7 +38,7 @@ def rain_fallspeed(d):
     d = d * mm_per_m # Formulas need diameter in mm.  Assumed passed in as m.
     #From Brandes et al. 2002
     #vt = -0.1021 + 4.932*d - 0.9551*d**2 + 0.07934*d**3 - 0.002362*d**4
-    vt2 = -0.1021 + d*(4.932 + d*(-0.9551 + d*(0.07934 - 0.002362*d)))
+    vt = -0.1021 + d*(4.932 + d*(-0.9551 + d*(0.07934 - 0.002362*d)))
     return vt
 
 if __name__ == '__main__':
