@@ -1,7 +1,8 @@
 import numpy as np
-from constants import density_water, mm_per_m
+from constants import density_water
+from scipy.constants import milli
 
-mp_N0 = 8.0e3 * mm_per_m # m^-3 mm^-1 * mm/m -> m^-4
+mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 
 def mp_slope_3rd(lwc):
     '''Gives the slope for the Marshall-Palmer drop size distribution
@@ -44,11 +45,12 @@ def rain_fallspeed(d):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from constants import g_per_kg
+    from scipy.constants import kilo as g_per_kg
+
     lwc = 19.0 / g_per_kg 
-    d = np.linspace(0.01, 10.0, 100) / mm_per_m # Up to 10mm in meters
+    d = np.linspace(0.01, 10.0, 100) * milli # Up to 10mm in meters
     mp = mp_from_lwc(d, lwc)
-    plt.semilogy(d * mm_per_m, mp / mm_per_m, 'b')
+    plt.semilogy(d / milli, mp * milli, 'b')
     plt.xlabel('Diameter (mm)')
     plt.ylabel(r'Concentration (# m$^{-3}$ mm$^{-1}$)')
     plt.title(r'Marshall-Palmer Distribution for %.1f g kg$^{-1}$ LWC'
