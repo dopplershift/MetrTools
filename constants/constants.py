@@ -1,3 +1,6 @@
+'''This is a collection of meteorologically significant constants.'''
+__version__ = 0.7
+
 from scipy.constants import pi, day, value, kilo
 R = value('molar gas constant')
 
