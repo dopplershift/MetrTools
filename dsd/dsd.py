@@ -1,6 +1,13 @@
+'''
+A collection of utility functions for doing drop-size distribution
+calculations.
+'''
+
 import numpy as np
 from constants import density_water
 from scipy.constants import milli
+
+__version__ = 0.7
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 
