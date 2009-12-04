@@ -33,9 +33,9 @@ def exponential(d, lam, N0):
     '''Returns the exponential distribution weights corresponding for the
        given diameters using the given slope and intercept parameters.  All
        quantities should be in MKS.'''
-    return gamma(d, lam, N0, 0.0)
+    return modified_gamma(d, lam, N0, 0.0)
 
-def gamma(d, lam, N0, mu):
+def modified_gamma(d, lam, N0, mu):
     '''Returns the modifed gamma distribution weights corresponding for the
        given diameters using the given slope, intercept, and shpe parameters.
        All quantities should be in MKS.'''
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from scipy.constants import kilo as g_per_kg
 
-    lwc = 19.0 / g_per_kg 
+    lwc = 19.0 / g_per_kg
     d = np.linspace(0.01, 10.0, 100) * milli # Up to 10mm in meters
     mp = mp_from_lwc(d, lwc)
     plt.semilogy(d / milli, mp * milli, 'b')
