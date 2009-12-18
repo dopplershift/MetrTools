@@ -18,28 +18,43 @@ def mp_slope_3rd(lwc):
     return (np.pi * density_water * mp_N0 / lwc)**0.25
 
 def mp_from_lwc(d, lwc):
-    '''Returns the Marshall-Palmer distribution weights corresponding for the
+    '''Returns the Marshall-Palmer distribution weights corresponding to the
        given diameters using the given liquid water content to calculate the
        slope parameter.  All quantities should be in MKS.'''
     return marshall_palmer(d, mp_slope_3rd(lwc))
 
 def marshall_palmer(d, lam):
-    '''Returns the Marshall-Palmer distribution weights corresponding for the
+    '''Returns the Marshall-Palmer distribution weights corresponding to the
        given diameters using the given slope parameter.  All quantities should
        be in MKS.'''
     return exponential(d, lam, mp_N0)
 
 def exponential(d, lam, N0):
-    '''Returns the exponential distribution weights corresponding for the
+    '''Returns the exponential distribution weights corresponding to the
        given diameters using the given slope and intercept parameters.  All
        quantities should be in MKS.'''
     return modified_gamma(d, lam, N0, 0.0)
 
 def modified_gamma(d, lam, N0, mu):
-    '''Returns the modifed gamma distribution weights corresponding for the
-       given diameters using the given slope, intercept, and shpe parameters.
+    '''Returns the modifed gamma distribution weights corresponding to the
+       given diameters using the given slope, intercept, and shape parameters.
        All quantities should be in MKS.'''
     return N0 * d**mu * np.exp(-d * lam)
+
+def gamma(d, d0, N, nu=-0.8):
+    '''Returns the gamma distribution weights corresponding to the
+       given diameters using the given parameters.
+       All quantities should be in MKS.'''
+    from scipy.special import gamma as gamma_func
+    rat = d / d0
+    return ((3 * N * (nu + 1) ** (nu + 1) / (d0 * gamma_func(nu + 1)))
+        * rat**(3*nu + 2) * np.exp(-(nu+1) * rat**3))
+
+def gamma_d0_from_lwc(lwc, N):
+    '''Returns the gamma distribution d0 parameter given the value of liquid
+       water content and number concentration.
+       All quantities should be in MKS.'''
+    return np.power(6 * lwc / (np.pi * N), 1. / 3.)
 
 def rain_fallspeed(d):
     '''Returns the raindrop fallspeed in m s^-1 given the drop diameter in m'''
