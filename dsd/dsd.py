@@ -6,6 +6,7 @@ calculations.
 import numpy as np
 from constants import density_water
 from scipy.constants import milli
+from scipy.special import gamma as gamma_func
 
 __version__ = 0.7
 
@@ -45,16 +46,15 @@ def gamma(d, d0, N, nu=-0.8):
     '''Returns the gamma distribution weights corresponding to the
        given diameters using the given parameters.
        All quantities should be in MKS.'''
-    from scipy.special import gamma as gamma_func
     rat = d / d0
-    return ((3 * N * (nu + 1) ** (nu + 1) / (d0 * gamma_func(nu + 1)))
-        * rat**(3*nu + 2) * np.exp(-(nu+1) * rat**3))
+    return ((N * (3 *(nu + 1) ** (nu + 1)) / (d0 * gamma_func(nu + 1)))
+        * (rat**(3*nu + 2) * np.exp(-(nu+1) * rat**3)))
 
 def gamma_d0_from_lwc(lwc, N):
     '''Returns the gamma distribution d0 parameter given the value of liquid
        water content and number concentration.
        All quantities should be in MKS.'''
-    return np.power(6 * lwc / (np.pi * N), 1. / 3.)
+    return np.power(6 * lwc / (np.pi * density_water * N), 1. / 3.)
 
 def rain_fallspeed(d):
     '''Returns the raindrop fallspeed in m s^-1 given the drop diameter in m'''
