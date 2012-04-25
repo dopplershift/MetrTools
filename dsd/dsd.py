@@ -65,6 +65,11 @@ def rain_fallspeed(d):
     vt = -0.1021 + d*(4.932 + d*(-0.9551 + d*(0.07934 - 0.002362*d)))
     return vt
 
+def lwc(d, dsd):
+    '''Returns the liquid water content in kg/m^3 given the number density
+    and diameters. These should be in MKS.'''
+    return np.trapz(d**3 * (np.pi * density_water / 6.) * dsd, x=d, axis=0)
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from scipy.constants import kilo as g_per_kg
