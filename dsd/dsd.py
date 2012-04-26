@@ -12,6 +12,13 @@ __version__ = 0.7
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 
+try:
+    import quantities as pq
+    mp_N0 = mp_N0 * pq.meter**-4
+    density_water = density_water * pq.kilogram / pq.meter**3
+except ImportError:
+    pass
+
 def constrained_gamma_shape(lam):
     '''Calculates the shape factor (mu) for the constrained gamma relation
        as given by Zhang et al. (2001), using the slope factor *lam*.'''
