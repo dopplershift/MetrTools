@@ -12,6 +12,11 @@ __version__ = 0.7
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 
+def constrained_gamma_shape(lam):
+    '''Calculates the shape factor (mu) for the constrained gamma relation
+       as given by Zhang et al. (2001), using the slope factor *lam*.'''
+    return -0.016 * lam**2 + 1.213 * lam - 1.957
+
 def mp_slope_3rd(lwc):
     '''Gives the slope for the Marshall-Palmer drop size distribution
        given the liquid water content density in kg/m^3. Returns
