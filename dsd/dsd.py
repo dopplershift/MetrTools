@@ -47,7 +47,7 @@ def modified_gamma(d, lam, N0, mu):
        All quantities should be in MKS.'''
     return N0 * d**mu * np.exp(-d * lam)
 
-def gamma(d, d0, N, nu=-0.8):
+def volume_gamma(d, d0, N, nu=-0.8):
     '''Returns the gamma distribution weights corresponding to the
        given diameters using the given parameters.
        All quantities should be in MKS.'''
