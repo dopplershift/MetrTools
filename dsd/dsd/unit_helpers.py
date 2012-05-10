@@ -1,10 +1,8 @@
+import numpy as np
+
 try:
     import functools
     import quantities as pq
-
-    # Add units to some constants
-    mp_N0 = mp_N0 * pq.meter**-4
-    density_water = density_water * pq.kilogram / pq.meter**3
 
     # Make a decorator to try to do appropriate unit conversion
     def check_units(**units):
@@ -22,6 +20,7 @@ try:
                         # Since one was passed in, return a Quantity
                         returnUnits = True
                     else:
+                        newUnits = units.get(kw, '')
                         kwargs[kw] = pq.Quantity(val, units=units[kw])
 
                 # Now handle positional args by linking them in the order
@@ -31,7 +30,8 @@ try:
                     if isinstance(val, pq.Quantity):
                         returnUnits = True
                     else:
-                        args[argInd] = pq.Quantity(val, units=units[arg])
+                        newUnits = units.get(arg, '')
+                        args[argInd] = pq.Quantity(val, units=newUnits)
 
                 # Call the function
                 ret = func(*args, **kwargs)
@@ -59,7 +59,8 @@ try:
                     if isinstance(val, pq.Quantity):
                         # Since one was passed in, return a Quantity
                         returnUnits = True
-                        kwargs[kw] = pq.Quantity(val, units=units[kw])
+                        newUnits = units.get(kw, '')
+                        kwargs[kw] = val.rescale(newUnits).magnitude
 
                 # Now handle positional args by linking them in the order
                 # given to the names in the code object.
@@ -67,14 +68,15 @@ try:
                         zip(func.func_code.co_varnames, args)):
                     if isinstance(val, pq.Quantity):
                         returnUnits = True
-                        args[argInd] = pq.Quantity(val, units=units[arg])
+                        newUnits = units.get(arg, '')
+                        args[argInd] = val.rescale(newUnits).magnitude
 
                 # Call the function
                 ret = func(*args, **kwargs)
 
                 # Force return type
                 if returnUnits:
-                    ret = Quantity(ret, units=return_units)
+                    ret = pq.Quantity(ret, units=return_units)
                 return ret
             return wrapper
         return decorator
@@ -83,10 +85,12 @@ try:
     # proper scaling first, like m/cm
     def exp(val, *args, **kwargs):
         try:
-            val = val.simplified()
-        except:
-            return np.exp(val, *args, **kwargs)
+            val = val.simplified
+        except AttributeError:
+            pass
+        return np.exp(val, *args, **kwargs)
 
+    unit_dict = dict()
     unit_dict['density_water'] = pq.kilogram / pq.meter**3
     unit_dict['mp_N0'] = pq.meter**-4
     unit_dict['gamma_power_scale'] = pq.meter

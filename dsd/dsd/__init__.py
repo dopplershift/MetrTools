@@ -9,11 +9,12 @@ from scipy.constants import milli
 from scipy.special import gamma as gamma_func
 
 __version__ = 0.7
+__package__ = 'dsd'
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 gamma_power_scale = 1.0 # meters
 
-from .unit_helpers import check_units, update_consts
+from .unit_helpers import check_units, force_units, update_consts, exp
 update_consts(locals())
 
 @force_units(None, lam='meter^-1')
@@ -29,6 +30,7 @@ def mp_slope_3rd(lwc):
        slope in m^-1.'''
     return (np.pi * density_water * mp_N0 / lwc)**0.25
 
+@check_units(d='meters', lwc='kg/m^3')
 def mp_from_lwc(d, lwc):
     '''Returns the Marshall-Palmer distribution weights corresponding to the
        given diameters using the given liquid water content to calculate the
