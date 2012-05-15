@@ -26,8 +26,8 @@ try:
                         # Since one was passed in, return a Quantity
                         returnUnits = True
                     else:
-                        newUnits = units.get(kw, '')
-                        kwargs[kw] = pq.Quantity(val, units=units[kw])
+                        if kw in units:
+                            kwargs[kw] = pq.Quantity(val, units=units[kw])
 
                 # Now handle positional args by linking them in the order
                 # given to the names in the code object.
@@ -36,8 +36,8 @@ try:
                     if isinstance(val, pq.Quantity):
                         returnUnits = True
                     else:
-                        newUnits = units.get(arg, '')
-                        args[argInd] = pq.Quantity(val, units=newUnits)
+                        if arg in units:
+                            args[argInd] = pq.Quantity(val, units=units[arg])
 
                 # Call the function
                 ret = func(*args, **kwargs)
@@ -52,8 +52,6 @@ try:
     # Make a decorator to force the proper units if we're given a
     # quantity
     def force_units(return_units, **units):
-        if return_units is None:
-            return_units = 'dimensionless'
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -85,7 +83,8 @@ try:
                 # Force return type
                 if returnUnits:
                     try:
-                        ret = pq.Quantity(ret, units=return_units)
+                        if return_units is not None:
+                            ret = pq.Quantity(ret, units=return_units)
                     except TypeError:
                         ret = tuple(pq.Quantity(r, units=u) for u,r
                                 in zip(return_units, ret))
