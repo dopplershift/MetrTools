@@ -3,6 +3,12 @@ import numpy as np
 try:
     import functools
     import quantities as pq
+    from quantities.decorators import quantitizer as quant
+
+    def quantitizer(handler):
+        def dec(func):
+            return quant(func, handler)
+        return dec
 
     # Make a decorator to try to do appropriate unit conversion
     def check_units(**units):
@@ -46,6 +52,8 @@ try:
     # Make a decorator to force the proper units if we're given a
     # quantity
     def force_units(return_units, **units):
+        if return_units is None:
+            return_units = 'dimensionless'
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -76,7 +84,11 @@ try:
 
                 # Force return type
                 if returnUnits:
-                    ret = pq.Quantity(ret, units=return_units)
+                    try:
+                        ret = pq.Quantity(ret, units=return_units)
+                    except TypeError:
+                        ret = tuple(pq.Quantity(r, units=u) for u,r
+                                in zip(return_units, ret))
                 return ret
             return wrapper
         return decorator
@@ -89,6 +101,17 @@ try:
         except AttributeError:
             pass
         return np.exp(val, *args, **kwargs)
+
+    def angle(val, deg=False):
+        try:
+            val = val.simplified
+            ret = np.angle(val, deg)
+            if deg:
+                return pq.Quantity(ret, units='degrees')
+            else:
+                return pq.Quantity(ret, units='radians')
+        except AttributeError:
+            return np.angle(val, deg)
 
     unit_dict = dict()
     unit_dict['density_water'] = pq.kilogram / pq.meter**3
@@ -105,9 +128,15 @@ except ImportError:
             return func
         return dec
 
+    def quantitizer(handler):
+        def dec(func):
+            return func
+        return dec
+
     force_units = check_units
 
     exp = np.exp
+    angle = np.angle
 
     def update_consts(local_dict):
         pass
