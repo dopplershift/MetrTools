@@ -17,7 +17,7 @@ gamma_power_scale = 1.0 # meters
 from .unit_helpers import check_units, force_units, update_consts, exp
 update_consts(locals())
 
-@force_units(None, lam='meter^-1')
+@force_units(None, lam='mm^-1')
 def constrained_gamma_shape(lam):
     '''Calculates the shape factor (mu) for the constrained gamma relation
        as given by Zhang et al. (2001), using the slope factor *lam*.'''
