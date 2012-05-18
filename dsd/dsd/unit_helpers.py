@@ -115,7 +115,6 @@ try:
     unit_dict = dict()
     unit_dict['density_water'] = pq.kilogram / pq.meter**3
     unit_dict['mp_N0'] = pq.meter**-4
-    unit_dict['gamma_power_scale'] = pq.meter
     def update_consts(local_dict):
         for kw in unit_dict:
             if kw in local_dict:

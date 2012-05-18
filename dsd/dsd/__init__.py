@@ -12,7 +12,6 @@ __version__ = 0.7
 __package__ = 'dsd'
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
-gamma_power_scale = 1.0 # meters
 
 from .unit_helpers import check_units, force_units, update_consts, exp
 update_consts(locals())
@@ -56,7 +55,11 @@ def modified_gamma(d, lam, N0, mu):
     '''Returns the modifed gamma distribution weights corresponding to the
        given diameters using the given slope, intercept, and shape parameters.
        All quantities should be in MKS.'''
-    return N0 * (d / gamma_power_scale)**mu * exp(-d * lam)
+    try:
+        d_for_shape = d.magnitude
+    except AttributeError:
+        d_for_shape = d
+    return N0 * (d_for_shape)**mu * exp(-d * lam)
 
 @check_units(d='meters', d0='meter', N='meter^-3')
 def volume_gamma(d, d0, N, nu=-0.8):
