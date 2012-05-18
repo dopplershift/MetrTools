@@ -96,6 +96,12 @@ def lwc(d, dsd):
     and diameters. These should be in MKS.'''
     return np.trapz(d**3 * (np.pi * density_water / 6.) * dsd, x=d, axis=0)
 
+@check_units(d='meters', dsd='meters^-4', fallspeed='meters/second')
+def rainrate(d, dsd, fallspeed):
+    '''Returns the rain rate in meters/second given the number density,
+    diameters, and fallspeeds. These should be in  MKS.'''
+    return (np.pi / 6.) *  np.trapz(d**3 * fallspeed * dsd, x=d, axis=0)
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from scipy.constants import kilo as g_per_kg
