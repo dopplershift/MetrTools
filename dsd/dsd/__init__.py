@@ -102,6 +102,19 @@ def rainrate(d, dsd, fallspeed):
     diameters, and fallspeeds. These should be in  MKS.'''
     return (np.pi / 6.) *  np.trapz(d**3 * fallspeed * dsd, x=d, axis=0)
 
+@force_units('mm^-1', qr='kg/m^3', N='mm^-3')
+def constrained_gamma_slope(qr, N):
+    ratio = (6 / (np.pi * density_water.magnitude)) * (qr / N)
+    print qr, N, ratio
+    roots = np.roots([-4.096e-6, 0.000931584, -0.070592688,
+        1.779763333 - ratio, 0.205717849, -1.206271489, -0.042920493])
+    print roots
+    return roots[(roots.real>0) & (roots.imag == 0.)].max().real
+
+@check_units(N='meters^-3', slope='meter^-1', shape='dimensionless')
+def constrained_gamma_intercept(N, slope, shape):
+    return N * slope ** (shape + 1) / gamma_func(shape + 1)
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from scipy.constants import kilo as g_per_kg
