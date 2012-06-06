@@ -7,6 +7,7 @@ import numpy as np
 from constants import density_water
 from scipy.constants import milli
 from scipy.special import gamma as gamma_func
+from scipy.linalg import eigvals
 
 __version__ = 0.7
 __package__ = 'dsd'
@@ -16,11 +17,14 @@ mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 from .unit_helpers import check_units, force_units, update_consts, exp
 update_consts(locals())
 
+mu_poly = np.poly1d([-0.016, 1.213, -1.957])
+lam_poly = (mu_poly + 3) * (mu_poly + 2) * (mu_poly + 1)
+
 @force_units(None, lam='mm^-1')
 def constrained_gamma_shape(lam):
     '''Calculates the shape factor (mu) for the constrained gamma relation
        as given by Zhang et al. (2001), using the slope factor *lam*.'''
-    return -0.016 * lam**2 + 1.213 * lam - 1.957
+    return mu_poly(lam)
 
 @check_units(lwc='kg/m^3')
 def mp_slope_3rd(lwc):
@@ -55,11 +59,7 @@ def modified_gamma(d, lam, N0, mu):
     '''Returns the modifed gamma distribution weights corresponding to the
        given diameters using the given slope, intercept, and shape parameters.
        All quantities should be in MKS.'''
-    try:
-        d_for_shape = d.magnitude
-    except AttributeError:
-        d_for_shape = d
-    return N0 * (d_for_shape)**mu * exp(-d * lam)
+    return N0 * no_units(d)**mu * exp(-d * lam)
 
 @check_units(d='meters', d0='meter', N='meter^-3')
 def volume_gamma(d, d0, N, nu=-0.8):
@@ -104,15 +104,23 @@ def rainrate(d, dsd, fallspeed):
 
 @force_units('mm^-1', qr='kg/m^3', N='mm^-3')
 def constrained_gamma_slope(qr, N, which=np.max):
-    ratio = (6 / (np.pi * density_water.magnitude)) * (qr / N)
-    print qr, N, ratio
-    roots = np.roots([-4.096e-6, 0.000931584, -0.070592688,
-        1.779763333 - ratio, 0.205717849, -1.206271489, -0.042920493])
-    slopes = roots[(roots.real>0) & (roots.imag == 0.)]
-    print slopes
-    return which(slopes).real
+    coeff0 = lam_poly.coeffs[0]
+    ratio = (6 / (np.pi * no_units(density_water) * coeff0)) * (qr / N)
+    ret = np.empty(ratio.shape + (6,), dtype=np.complex64)
 
-@check_units(N='meters^-3', slope='meter^-1', shape='dimensionless')
+    # Taken from numpy.roots, but we can reuse the matrix quite a bit and cut
+    # some set up time
+    A = np.diag(np.ones((5,), np.float32), -1)
+    coeffs = -lam_poly.coeffs[1:] / coeff[0]
+    coeff2 = coeffs[2]
+    A[0, :] = np.array(coeffs)
+    for ind,r in enumerate(ratio):
+        A[0, 2] = coeff2 + r
+        ret[ind, :] = eigvals(A)
+
+    return ret
+
+@check_units(N='meters^-3', slope='meter^-1')
 def constrained_gamma_intercept(N, slope, shape):
     return N * slope ** (shape + 1) / gamma_func(shape + 1)
 
