@@ -1,5 +1,11 @@
 import numpy as np
 
+def no_units(num):
+    try:
+        return num.magnitude
+    except AttributeError:
+        return num
+
 try:
     import functools
     import quantities as pq
