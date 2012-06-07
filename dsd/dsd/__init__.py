@@ -14,17 +14,8 @@ __package__ = 'dsd'
 
 mp_N0 = 8.0e3 / milli # m^-3 mm^-1 / m mm^-1 -> m^-4
 
-from .unit_helpers import check_units, force_units, update_consts, exp
+from .unit_helpers import check_units, force_units, update_consts, exp, no_units
 update_consts(locals())
-
-mu_poly = np.poly1d([-0.016, 1.213, -1.957])
-lam_poly = (mu_poly + 3) * (mu_poly + 2) * (mu_poly + 1)
-
-@force_units(None, lam='mm^-1')
-def constrained_gamma_shape(lam):
-    '''Calculates the shape factor (mu) for the constrained gamma relation
-       as given by Zhang et al. (2001), using the slope factor *lam*.'''
-    return mu_poly(lam)
 
 @check_units(lwc='kg/m^3')
 def mp_slope_3rd(lwc):
@@ -102,34 +93,69 @@ def rainrate(d, dsd, fallspeed):
     diameters, and fallspeeds. These should be in  MKS.'''
     return (np.pi / 6.) *  np.trapz(d**3 * fallspeed * dsd, x=d, axis=0)
 
+@check_units(N='m^-3', qr='kg/m^3')
+def exponential_slope(N, qr):
+    '''Returns the slope for the exponential distribution in m^-1. qr is the
+    liquid water content and N is the number concentration. Quantities should
+    be in MKS.'''
+    return (np.pi * density_water * (N / qr)) ** (1. / 3.)
+
+mu_poly = np.poly1d([-0.016, 1.213, -1.957])
+lam_poly = (mu_poly + 3) * (mu_poly + 2) * (mu_poly + 1)
+
+@force_units(None, lam='mm^-1')
+def constrained_gamma_shape(lam):
+    '''Calculates the shape factor (mu) for the constrained gamma relation
+       as given by Zhang et al. (2001), using the slope factor *lam*.'''
+    return mu_poly(lam)
+
 @force_units('mm^-1', qr='kg/m^3', N='mm^-3')
-def constrained_gamma_slope(qr, N, which=np.max):
+def constrained_gamma_slope(N, qr, target_lam=10):
     coeff0 = lam_poly.coeffs[0]
     ratio = (6 / (np.pi * no_units(density_water) * coeff0)) * (qr / N)
-    ret = np.empty(ratio.shape + (6,), dtype=np.complex64)
+    roots = np.empty(ratio.shape + (6,), dtype=np.complex64)
 
     # Taken from numpy.roots, but we can reuse the matrix quite a bit and cut
     # some set up time
     A = np.diag(np.ones((5,), np.float32), -1)
-    coeffs = -lam_poly.coeffs[1:] / coeff[0]
+    coeffs = -lam_poly.coeffs[1:] / coeff0
     coeff2 = coeffs[2]
     A[0, :] = np.array(coeffs)
     for ind,r in enumerate(ratio):
         A[0, 2] = coeff2 + r
-        ret[ind, :] = eigvals(A)
+        roots[ind, :] = eigvals(A)
 
-    return ret
+    # Eliminate complex and negative roots
+    roots[np.iscomplex(roots) | (roots < 0)] = np.nan
+    inds = np.nanargmin(np.abs(roots - target_lam), axis=1)
 
-@check_units(N='meters^-3', slope='meter^-1')
-def constrained_gamma_intercept(N, slope, shape):
+    # Fix up places where all items were nan. Set index to 0, which will
+    # end up returning a nan
+    inds[(inds > roots.shape[1] - 1) | (inds < 0)] = 0
+    return roots[np.arange(inds.size), inds].real
+
+@force_units('meters^-4', N='meters^-3', slope='meter^-1')
+def gamma_intercept(N, slope, shape):
+    '''Returns the intercept for the distribution in m^-4. N is the
+    number concentration, slope is the distribution's slope
+    parameter, and shape is the gamma shape paramter. All quantities should be
+    in MKS.'''
     return N * slope ** (shape + 1) / gamma_func(shape + 1)
 
 @check_units(N='meters^3', qr='kg/m^3', d='mm')
-def constrained_gamma_from_moments(N, qr, d, which=np.max):
-    slope = constrained_gamma_slope(qr, N, which)
+def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
+    slope = constrained_gamma_slope(N, qr, preferred_slope)
     shape = constrained_gamma_shape(slope)
-    intercept = constrained_gamma_intercept(N, slope, shape)
-    return modified_gamma(d, lam, intercept, shape)
+
+    # If the slope is nan, it means fitting the contrained gamma failed and
+    # we need to replace with with that from an exponential distribution
+    fix_mask = np.isnan(slope)
+    if np.any(fix_mask):
+        slope[fix_mask] = exponential_slope(N[fix_mask], qr[fix_mask])
+        shape[fix_mask] = 0.
+
+    intercept = gamma_intercept(N, slope, shape)
+    return modified_gamma(d, slope, intercept, shape)
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
