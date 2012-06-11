@@ -45,7 +45,9 @@ def exponential(d, lam, N0):
        quantities should be in MKS.'''
     return modified_gamma(d, lam, N0, 0.0)
 
-@check_units(d='meters', lam='1/meter', N0='meter^-4')
+# Need to force units to meters. Otherwise we need a unit conversion raised
+# to the shape power.
+@force_units('meter^-4', d='meters', lam='1/meter', N0='meter^-4')
 def modified_gamma(d, lam, N0, mu):
     '''Returns the modifed gamma distribution weights corresponding to the
        given diameters using the given slope, intercept, and shape parameters.
@@ -127,11 +129,11 @@ def constrained_gamma_slope(N, qr, target_lam=10):
 
     # Eliminate complex and negative roots
     roots[np.iscomplex(roots) | (roots < 0)] = np.nan
-    inds = np.nanargmin(np.abs(roots - target_lam), axis=1)
+    inds = np.nanargmin(np.abs(roots - target_lam), axis=-1)
 
     # Fix up places where all items were nan. Set index to 0, which will
     # end up returning a nan
-    inds[(inds > roots.shape[1] - 1) | (inds < 0)] = 0
+    inds[(inds > roots.shape[-1] - 1) | (inds < 0)] = 0
     return roots[np.arange(inds.size), inds].real
 
 @force_units('meters^-4', N='meters^-3', slope='meter^-1')
@@ -154,8 +156,11 @@ def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
         slope[fix_mask] = exponential_slope(N[fix_mask], qr[fix_mask])
         shape[fix_mask] = 0.
 
-    intercept = gamma_intercept(N, slope, shape)
-    return modified_gamma(d, slope, intercept, shape)
+    # For better numerical stability, we don't calculate the intercept
+    # parameter directly. Instead, it's incorporated into a different
+    # parameterized form of the distribution.
+    norm_d = no_units(d * slope)
+    return N * slope * norm_d ** shape * exp(-norm_d) / gamma_func(shape + 1)
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
