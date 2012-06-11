@@ -2,7 +2,7 @@ import numpy as np
 
 def no_units(num):
     try:
-        return num.magnitude
+        return num.simplified.magnitude
     except AttributeError:
         return num
 
