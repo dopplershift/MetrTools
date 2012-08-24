@@ -129,7 +129,13 @@ def constrained_gamma_slope(N, qr, target_lam=10):
 
     # Eliminate complex and negative roots
     roots[np.iscomplex(roots) | (roots < 0)] = np.nan
-    inds = np.nanargmin(np.abs(roots - target_lam), axis=-1)
+
+    # If we were passed a callable, use this to pick root, otherwise
+    # pick closest to given value
+    if callable(target_lam):
+        inds = target_lam(roots, axis=-1)
+    else:
+        inds = np.nanargmin(np.abs(roots - target_lam), axis=-1)
 
     # Fix up places where all items were nan. Set index to 0, which will
     # end up returning a nan
