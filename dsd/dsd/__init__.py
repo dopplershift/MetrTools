@@ -150,6 +150,14 @@ def gamma_intercept(N, slope, shape):
     in MKS.'''
     return N * slope ** (shape + 1) / gamma_func(shape + 1)
 
+@check_units(N='meters^-3', qr='kg/m^3')
+def gamma_slope(N, qr, shape):
+    '''Returns the slope for the gamma distribution in m^-1. N is the
+    number concentration, qr is the liquid water content, and shape is the
+    gamma shape parameter. All quantities should be in MKS.'''
+    shape_factor = (shape + 3) * (shape + 2) * (shape + 1) / 6.
+    return (shape_factor * np.pi * density_water * (N / qr)) ** (1. / 3.)
+
 @check_units(N='meters^3', qr='kg/m^3', d='mm')
 def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
     slope = constrained_gamma_slope(N, qr, preferred_slope)
