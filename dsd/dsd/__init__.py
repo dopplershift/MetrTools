@@ -158,7 +158,7 @@ def gamma_slope(N, qr, shape):
     shape_factor = (shape + 3) * (shape + 2) * (shape + 1) / 6.
     return (shape_factor * np.pi * density_water * (N / qr)) ** (1. / 3.)
 
-@check_units(N='meters^3', qr='kg/m^3', d='mm')
+@check_units(N='meters^-3', qr='kg/m^3', d='mm')
 def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
     slope = constrained_gamma_slope(N, qr, preferred_slope)
     shape = constrained_gamma_shape(slope)
