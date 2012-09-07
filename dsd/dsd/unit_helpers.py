@@ -7,8 +7,8 @@ def no_units(num):
         return num
 
 try:
-    import functools
     import quantities as pq
+    from decorator import decorator
     from quantities.decorators import quantitizer as quant
 
     def quantitizer(handler):
@@ -18,85 +18,81 @@ try:
 
     # Make a decorator to try to do appropriate unit conversion
     def check_units(**units):
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                args = list(args)
+        @decorator
+        def dec(func, *args, **kwargs):
+            args = list(args)
 
-                # By default, we do not want units back out
-                returnUnits = False
+            # By default, we do not want units back out
+            returnUnits = False
 
-                # Handle keyword args
-                for kw,val in kwargs.items():
-                    if isinstance(val, pq.Quantity):
-                        # Since one was passed in, return a Quantity
-                        returnUnits = True
-                    else:
-                        if kw in units:
-                            kwargs[kw] = pq.Quantity(val, units=units[kw])
+            # Handle keyword args
+            for kw,val in kwargs.items():
+                if isinstance(val, pq.Quantity):
+                    # Since one was passed in, return a Quantity
+                    returnUnits = True
+                else:
+                    if kw in units:
+                        kwargs[kw] = pq.Quantity(val, units=units[kw])
 
-                # Now handle positional args by linking them in the order
-                # given to the names in the code object.
-                for argInd,(arg,val) in enumerate(
-                        zip(func.func_code.co_varnames, args)):
-                    if isinstance(val, pq.Quantity):
-                        returnUnits = True
-                    else:
-                        if arg in units:
-                            args[argInd] = pq.Quantity(val, units=units[arg])
+            # Now handle positional args by linking them in the order
+            # given to the names in the code object.
+            for argInd,(arg,val) in enumerate(
+                    zip(func.func_code.co_varnames, args)):
+                if isinstance(val, pq.Quantity):
+                    returnUnits = True
+                else:
+                    if arg in units:
+                        args[argInd] = pq.Quantity(val, units=units[arg])
 
-                # Call the function
-                ret = func(*args, **kwargs)
+            # Call the function
+            ret = func(*args, **kwargs)
 
-                # Make sure the returned type is appropriate
-                if not returnUnits:
-                    ret = ret.simplified.magnitude
-                return ret
-            return wrapper
-        return decorator
+            # Make sure the returned type is appropriate
+            if not returnUnits:
+                ret = ret.simplified.magnitude
+            return ret
+        return dec
 
     # Make a decorator to force the proper units if we're given a
     # quantity
     def force_units(return_units, **units):
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                args = list(args)
+        @decorator
+        def dec(func, *args, **kwargs):
+            args = list(args)
 
-                # By default, we do not want units back out
-                returnUnits = False
+            # By default, we do not want units back out
+            returnUnits = False
 
-                # Handle keyword args
-                for kw,val in kwargs.items():
-                    if isinstance(val, pq.Quantity):
-                        # Since one was passed in, return a Quantity
-                        returnUnits = True
-                        newUnits = units.get(kw, '')
-                        kwargs[kw] = val.rescale(newUnits).magnitude
+            # Handle keyword args
+            for kw,val in kwargs.items():
+                if isinstance(val, pq.Quantity):
+                    # Since one was passed in, return a Quantity
+                    returnUnits = True
+                    newUnits = units.get(kw, '')
+                    kwargs[kw] = val.rescale(newUnits).magnitude
 
-                # Now handle positional args by linking them in the order
-                # given to the names in the code object.
-                for argInd,(arg,val) in enumerate(
-                        zip(func.func_code.co_varnames, args)):
-                    if isinstance(val, pq.Quantity):
-                        returnUnits = True
-                        newUnits = units.get(arg, '')
-                        args[argInd] = val.rescale(newUnits).magnitude
+            # Now handle positional args by linking them in the order
+            # given to the names in the code object.
+            for argInd,(arg,val) in enumerate(
+                    zip(func.func_code.co_varnames, args)):
+                if isinstance(val, pq.Quantity):
+                    returnUnits = True
+                    newUnits = units.get(arg, '')
+                    args[argInd] = val.rescale(newUnits).magnitude
 
-                # Call the function
-                ret = func(*args, **kwargs)
+            # Call the function
+            ret = func(*args, **kwargs)
 
-                # Force return type
-                if returnUnits:
-                    try:
-                        if return_units is not None:
-                            ret = pq.Quantity(ret, units=return_units)
-                    except TypeError:
-                        ret = tuple(pq.Quantity(r, units=u) for u,r
-                                in zip(return_units, ret))
-                return ret
-            return wrapper
-        return decorator
+            # Force return type
+            if returnUnits:
+                try:
+                    if return_units is not None:
+                        ret = pq.Quantity(ret, units=return_units)
+                except TypeError:
+                    ret = tuple(pq.Quantity(r, units=u) for u,r
+                            in zip(return_units, ret))
+            return ret
+        return dec
 
     # Needed to we can call exp with unitless quantities that just need
     # proper scaling first, like m/cm
