@@ -45,6 +45,12 @@ def exponential(d, lam, N0):
        quantities should be in MKS.'''
     return modified_gamma(d, lam, N0, 0.0)
 
+@check_units(d='meters', lwc='kg/m^3', N0='meter^-4')
+def exponential_from_moments(d, N, lwc):
+    slope = exponential_slope(N, lwc)
+    N0 = gamma_intercept(N, slope, 0.0)
+    return exponential(d, slope, N0)
+
 # Need to force units to meters. Otherwise we need a unit conversion raised
 # to the shape power.
 @force_units('meter^-4', d='meters', lam='1/meter', N0='meter^-4')
