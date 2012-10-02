@@ -58,7 +58,7 @@ def modified_gamma(d, lam, N0, mu):
     '''Returns the modifed gamma distribution weights corresponding to the
        given diameters using the given slope, intercept, and shape parameters.
        All quantities should be in MKS.'''
-    return N0 * no_units(d)**mu * exp(-d * lam)
+    return no_units(d)**mu * (N0 * exp(-d * lam))
 
 @check_units(d='meters', d0='meter', N='meter^-3')
 def volume_gamma(d, d0, N, nu=-0.8):
