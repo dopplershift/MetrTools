@@ -119,6 +119,14 @@ def constrained_gamma_shape(lam):
 
 @force_units('mm^-1', qr='kg/m^3', N='mm^-3')
 def constrained_gamma_slope(N, qr, target_lam=10):
+    '''Returns the constrained gamma distribution slope for the given set of
+    moments. N is the number concentration and qr the liquid water content.
+    All quantities should be in MKS. This distribution relies on the lamba-mu
+    relation of Brandes et al. (2001) to reduce the parameter space to match
+    the number of moments available. Because this process yields a high order
+    polynomial, one of the positive roots must be selected based on a
+    critera--by default the value closes to 10 (mm^-1) is selected, but this
+    can be overridden with a different value or a callable.'''
     coeff0 = lam_poly.coeffs[0]
     ratio = (6 / (np.pi * no_units(density_water) * coeff0)) * (qr / N)
     roots = np.empty(ratio.shape + (6,), dtype=np.complex64)
@@ -166,6 +174,15 @@ def gamma_slope(N, qr, shape):
 
 @check_units(N='meters^-3', qr='kg/m^3', d='mm')
 def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
+    '''Returns the constrained gamma distribution for the given set of moments.
+    d are the diameters, N is the number concentration, qr the liquid water
+    content, and shape is the gamme shape parameter.  All quantities should be
+    in MKS. This distribution relies on the lamba-mu relation of Brandes et
+    al. (2001) to reduce the parameter space to match the number of moments
+    available. Because this process yields a high order polynomial, one of the
+    positive roots must be selected based on a critera--by default the value
+    closes to 10 (mm^-1) is selected, but this can be overridden with a
+    different value or a callable.'''
     slope = constrained_gamma_slope(N, qr, preferred_slope)
     shape = constrained_gamma_shape(slope)
 
@@ -173,6 +190,9 @@ def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
     # we need to replace with with that from an exponential distribution
     fix_mask = np.isnan(slope)
     if np.any(fix_mask):
+        import warnings
+        warnings.warn('Replacing some fits with exponential: %d'
+                % (fix_mask.sum()))
         slope[fix_mask] = exponential_slope(N[fix_mask], qr[fix_mask])
         shape[fix_mask] = 0.
 
