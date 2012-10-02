@@ -172,6 +172,18 @@ def gamma_slope(N, qr, shape):
     shape_factor = (shape + 3) * (shape + 2) * (shape + 1) / 6.
     return (shape_factor * np.pi * density_water * (N / qr)) ** (1. / 3.)
 
+# This default shape is used to match the D^6 moment (reflectivity) from a
+# volume gamma distribution, with fixed shape -0.8, having the same qr and N.
+@check_units(N='meters^-3', qr='kg/m^-3', mu='dimensionless')
+def gamma_from_moments(d, N, qr, shape=1.81028329387715):
+    '''Returns the gamma distribution for the given set of moments and
+    shape parameter. d are the diameters, N is the number concentration,
+    qr the liquid water content, and shape is the gamme shape parameter.
+    All quantities should be in MKS.'''
+    slope = gamma_slope(N, qr, shape)
+    N0 = gamma_intercept(N, slope, shape)
+    return modified_gamma(d, slope, N0, shape)
+
 @check_units(N='meters^-3', qr='kg/m^3', d='mm')
 def constrained_gamma_from_moments(N, qr, d, preferred_slope=10):
     '''Returns the constrained gamma distribution for the given set of moments.
