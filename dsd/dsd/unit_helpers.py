@@ -123,7 +123,7 @@ try:
                 local_dict[kw] = local_dict[kw] * unit_dict[kw]
 
 except ImportError:
-    def check_units(**kwargs):
+    def check_units(*args, **kwargs):
         def dec(func):
             return func
         return dec
